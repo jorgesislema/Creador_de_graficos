@@ -1,0 +1,15 @@
+[project]
+name = "chart-maker"
+version = "0.1.0"
+description = "Creador de gráficos para análisis y ciencia de datos"
+authors = ["Tu Nombre <tu.email@ejemplo.com>"]
+requires-python = ">=3.8"
+dependencies = [
+    "PySide6",
+    "pydantic",
+    "jinja2",
+    "pandas"
+]
+
+[tool.setuptools]
+packages = ["app", "core", "exporters", "packaging"]
