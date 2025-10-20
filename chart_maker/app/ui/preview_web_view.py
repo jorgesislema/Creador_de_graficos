@@ -6,7 +6,10 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextBrowser, QLabel, QPushB
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 import json
+from pathlib import Path
 from typing import Dict, Any, Optional
+import os
+from pathlib import Path
 
 
 class PreviewWebView(QWidget):
@@ -26,12 +29,7 @@ class PreviewWebView(QWidget):
         header_label = QLabel("Vista Previa del Gráfico")
         header_label.setFont(QFont("Arial", 14, QFont.Bold))
         header_layout.addWidget(header_label)
-        
-        # Botón para abrir en navegador
-        self.open_browser_btn = QPushButton("Abrir en Navegador")
-        self.open_browser_btn.clicked.connect(self.open_in_browser)
-        self.open_browser_btn.setEnabled(False)
-        header_layout.addWidget(self.open_browser_btn)
+        header_layout.addStretch()
         
         layout.addLayout(header_layout)
         
@@ -118,7 +116,6 @@ class PreviewWebView(QWidget):
         """
         try:
             self.current_spec = spec
-            self.open_browser_btn.setEnabled(True)
             
             # Generar vista previa HTML
             preview_html = self.generate_preview_html(spec)
@@ -352,7 +349,6 @@ class PreviewWebView(QWidget):
         """Limpia la vista previa"""
         self.load_initial_content()
         self.current_spec = None
-        self.open_browser_btn.setEnabled(False)
     
     def open_in_browser(self):
         """Abre el gráfico en el navegador web"""
@@ -380,46 +376,56 @@ class PreviewWebView(QWidget):
     
     def get_vega_template(self, spec: Optional[Dict[str, Any]] = None) -> str:
         """
-        Genera el template HTML completo con Vega-Lite para navegador
+        Genera template HTML local con información del gráfico (sin CDN externos)
         
         Args:
             spec: Especificación del gráfico en formato Vega-Lite
             
         Returns:
-            HTML con el gráfico embebido y funcional
+            HTML con información del gráfico para visualización local
         """
         default_spec = {
-            "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
-            "description": "Gráfico de ejemplo",
-            "data": {
-                "values": [
-                    {"category": "A", "value": 28},
-                    {"category": "B", "value": 55},
-                    {"category": "C", "value": 43},
-                    {"category": "D", "value": 91},
-                    {"category": "E", "value": 81}
-                ]
-            },
             "mark": "bar",
-            "encoding": {
-                "x": {"field": "category", "type": "nominal"},
-                "y": {"field": "value", "type": "quantitative"}
-            },
+            "description": "Gráfico de ejemplo",
+            "data": {"values": [{"category": "A", "value": 28}]},
             "width": 400,
             "height": 300
         }
         
         vega_spec = spec if spec else default_spec
         
+        # Extraer información clave para mostrar
+        chart_type = vega_spec.get("mark", "No especificado")
+        title = vega_spec.get("title", "Gráfico generado")
+        description = vega_spec.get("description", "")
+        width = vega_spec.get("width", "Auto")
+        height = vega_spec.get("height", "Auto")
+        
+        # Contar datos
+        data_info = "No hay datos"
+        if "data" in vega_spec and "values" in vega_spec["data"]:
+            data_count = len(vega_spec["data"]["values"])
+            data_info = f"{data_count} registros"
+        
+        # Información de encoding
+        encoding_info = "No especificado"
+        if "encoding" in vega_spec:
+            fields = []
+            for channel, field_def in vega_spec["encoding"].items():
+                if isinstance(field_def, dict) and "field" in field_def:
+                    fields.append(f"{channel}: {field_def['field']}")
+            if fields:
+                encoding_info = ", ".join(fields)
+        
+        # JSON formateado para mostrar
+        spec_json = json.dumps(vega_spec, indent=2, ensure_ascii=False)
+        
         html_template = f"""
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Gráfico - Creador de Gráficos</title>
-    <script src="https://cdn.jsdelivr.net/npm/vega@6"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega-lite@6"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega-embed@7"></script>
+    <title>{title} - Creador de Gráficos</title>
     <style>
         body {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -427,58 +433,83 @@ class PreviewWebView(QWidget):
             padding: 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        }}
+        
+        .container {{
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin: 0 auto;
+            max-width: 800px;
         }}
         
         .header {{
-            color: white;
             text-align: center;
             margin-bottom: 30px;
         }}
         
         .header h1 {{
+            color: #333;
             margin: 0;
             font-size: 28px;
-            font-weight: 300;
         }}
         
-        .header p {{
-            margin: 10px 0 0 0;
-            opacity: 0.9;
-            font-size: 16px;
+        .info-grid {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
         }}
         
-        .chart-container {{
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            padding: 30px;
-            margin: 20px;
-            min-width: 600px;
-        }}
-        
-        #vis {{
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }}
-        
-        .error-message {{
-            color: #d32f2f;
-            background-color: #ffebee;
-            border: 1px solid #e57373;
+        .info-card {{
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
             border-radius: 8px;
-            padding: 20px;
-            margin: 20px;
-            font-family: monospace;
+            padding: 15px;
+        }}
+        
+        .info-label {{
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }}
+        
+        .info-value {{
+            color: #666;
+            font-size: 14px;
+        }}
+        
+        .chart-visual {{
+            background: linear-gradient(45deg, #f0f8ff, #e6f3ff);
+            border: 2px dashed #007acc;
+            border-radius: 8px;
+            padding: 40px;
             text-align: center;
+            margin: 20px 0;
+            font-size: 18px;
+            color: #007acc;
+        }}
+        
+        .spec-container {{
+            margin-top: 30px;
+        }}
+        
+        .spec-json {{
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            max-height: 300px;
+            overflow-y: auto;
         }}
         
         .actions {{
-            margin-top: 20px;
             text-align: center;
+            margin-top: 20px;
         }}
         
         .actions button {{
@@ -490,93 +521,53 @@ class PreviewWebView(QWidget):
             font-size: 14px;
             cursor: pointer;
             margin: 0 5px;
-            transition: transform 0.2s;
-        }}
-        
-        .actions button:hover {{
-            transform: translateY(-2px);
-        }}
-        
-        .spec-info {{
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 20px;
-            font-size: 14px;
-            color: #666;
         }}
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>📊 Creador de Gráficos</h1>
-        <p>Gráfico generado con Vega-Lite</p>
-    </div>
-    
-    <div class="chart-container">
-        <div id="vis"></div>
+    <div class="container">
+        <div class="header">
+            <h1>📊 {title}</h1>
+            <p>{description}</p>
+        </div>
         
-        <div class="spec-info">
-            <strong>Tipo:</strong> {vega_spec.get('mark', 'No especificado')} |
-            <strong>Datos:</strong> {len(vega_spec.get('data', {}).get('values', [])) if vega_spec.get('data', {}).get('values') else 'Externos'} registros |
-            <strong>Dimensiones:</strong> {vega_spec.get('width', 'Auto')} × {vega_spec.get('height', 'Auto')}
+        <div class="info-grid">
+            <div class="info-card">
+                <div class="info-label">🎯 Tipo de Gráfico</div>
+                <div class="info-value">{chart_type}</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">� Dimensiones</div>
+                <div class="info-value">{width} × {height}</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">📊 Datos</div>
+                <div class="info-value">{data_info}</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">🎨 Codificación</div>
+                <div class="info-value">{encoding_info}</div>
+            </div>
+        </div>
+        
+        <div class="chart-visual">
+            📈 Vista Previa del Gráfico: {chart_type.upper()}<br/>
+            <small>Representación visual disponible en aplicación GUI</small>
+        </div>
+        
+        <div class="spec-container">
+            <h3>🔧 Especificación Completa</h3>
+            <div class="spec-json">{spec_json}</div>
         </div>
         
         <div class="actions">
-            <button onclick="downloadSVG()">💾 Descargar SVG</button>
-            <button onclick="downloadPNG()">🖼️ Descargar PNG</button>
             <button onclick="copySpec()">📋 Copiar Especificación</button>
+            <button onclick="downloadSpec()">💾 Descargar JSON</button>
         </div>
     </div>
     
     <script type="text/javascript">
         const spec = {json.dumps(vega_spec, indent=2)};
-        let vegaView;
-        
-        function renderChart() {{
-            vegaEmbed('#vis', spec, {{
-                theme: 'quartz',
-                renderer: 'svg',
-                actions: {{
-                    export: true,
-                    source: false,
-                    compiled: false,
-                    editor: false
-                }}
-            }}).then(result => {{
-                vegaView = result.view;
-                console.log('Gráfico renderizado exitosamente');
-            }}).catch(error => {{
-                console.error('Error al renderizar el gráfico:', error);
-                document.getElementById('vis').innerHTML = 
-                    '<div class="error-message">❌ Error al renderizar el gráfico: ' + error.message + '</div>';
-            }});
-        }}
-        
-        function downloadSVG() {{
-            if (vegaView) {{
-                vegaView.toSVG().then(svg => {{
-                    const blob = new Blob([svg], {{type: 'image/svg+xml'}});
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'chart.svg';
-                    a.click();
-                    URL.revokeObjectURL(url);
-                }});
-            }}
-        }}
-        
-        function downloadPNG() {{
-            if (vegaView) {{
-                vegaView.toImageURL('png', 2).then(url => {{
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'chart.png';
-                    a.click();
-                }});
-            }}
-        }}
         
         function copySpec() {{
             navigator.clipboard.writeText(JSON.stringify(spec, null, 2)).then(() => {{
@@ -584,8 +575,15 @@ class PreviewWebView(QWidget):
             }});
         }}
         
-        // Renderizar cuando la página esté lista
-        document.addEventListener('DOMContentLoaded', renderChart);
+        function downloadSpec() {{
+            const blob = new Blob([JSON.stringify(spec, null, 2)], {{type: 'application/json'}});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'chart-spec.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }}
     </script>
 </body>
 </html>
