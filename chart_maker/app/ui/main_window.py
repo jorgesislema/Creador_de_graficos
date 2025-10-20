@@ -15,10 +15,11 @@ import io
 from typing import Dict, Any, Optional
 
 from ...core.chart_types import CHART_TYPES
-from ...core.examples import EXAMPLES
+from ...core.examples_new import EXAMPLES
 from ...core.spec import ChartSpec
+from ...core.vegalite_mapper import chartspec_to_vegalite
 from ...exporters import get_exporter, list_exporters
-from .preview_web_view import PreviewWebView
+from .preview_web_view_local import PreviewWebView
 
 
 class MainWindow(QMainWindow):
@@ -305,22 +306,23 @@ class MainWindow(QMainWindow):
         export_json_btn.clicked.connect(self.export_json)
         export_layout.addWidget(export_json_btn)
         
-        export_html_btn = QPushButton("Exportar HTML")
-        export_html_btn.clicked.connect(self.export_html)
-        export_layout.addWidget(export_html_btn)
-        
         # Separador
         export_layout.addWidget(QLabel("--- Plataformas ---"))
         
         # Power BI
-        export_powerbi_btn = QPushButton("Exportar para Power BI")
+        export_powerbi_btn = QPushButton("Exportar para Power BI (.pbiviz)")
         export_powerbi_btn.clicked.connect(lambda: self.export_to_platform('powerbi_python'))
         export_layout.addWidget(export_powerbi_btn)
         
         # Tableau
-        export_tableau_btn = QPushButton("Exportar para Tableau")
+        export_tableau_btn = QPushButton("Exportar para Tableau (.twb)")
         export_tableau_btn.clicked.connect(lambda: self.export_to_platform('tableau'))
         export_layout.addWidget(export_tableau_btn)
+        
+        # Tableau con datos
+        export_tableau_twbx_btn = QPushButton("Exportar para Tableau (.twbx)")
+        export_tableau_twbx_btn.clicked.connect(lambda: self.export_to_platform_with_extension('tableau', '.twbx'))
+        export_layout.addWidget(export_tableau_twbx_btn)
         
         # Looker
         export_looker_btn = QPushButton("Exportar para Looker")
@@ -438,8 +440,11 @@ class MainWindow(QMainWindow):
             spec = self.build_current_spec()
             
             if spec:
-                # Actualizar vista previa
-                self.preview_web_view.update_chart(spec)
+                # Mapear ChartSpec canónico → Vega-Lite para la vista previa
+                vega_spec = chartspec_to_vegalite(spec)
+                # Actualizar vista previa con Vega-Lite
+                self.preview_web_view.update_chart(vega_spec)
+                # Guardar la especificación canónica como estado actual
                 self.current_spec = ChartSpec(**spec)
                 self.statusBar().showMessage("Vista previa actualizada")
             
@@ -448,14 +453,15 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage(f"Error: {e}")
     
     def build_current_spec(self) -> Optional[Dict[str, Any]]:
-        """Construye la especificación actual basada en los controles"""
+        """Construye la especificación ChartSpec canónica basada en los controles"""
         try:
-            # Datos base
-            spec = {
-                "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
-                "mark": self.chart_type_combo.currentText(),
+            # Especificación canónica base
+            spec: Dict[str, Any] = {
+                "type": self.chart_type_combo.currentText(),
                 "width": self.width_spin.value(),
-                "height": self.height_spin.value()
+                "height": self.height_spin.value(),
+                "encoding": {},
+                "options": {}
             }
             
             # Título y descripción
@@ -472,30 +478,35 @@ class MainWindow(QMainWindow):
                 data_text = self.data_editor.toPlainText().strip()
                 if data_text:
                     data = json.loads(data_text)
+                    # Aceptar tanto lista de dicts como dict (e.g., {"values": [...]}, {"url": "..."})
                     spec["data"] = data
                 else:
                     # Datos de ejemplo por defecto
-                    spec["data"] = {
-                        "values": [
-                            {"x": "A", "y": 10},
-                            {"x": "B", "y": 20},
-                            {"x": "C", "y": 15}
-                        ]
-                    }
+                    spec["data"] = [
+                        {"x": "A", "y": 10},
+                        {"x": "B", "y": 20},
+                        {"x": "C", "y": 15}
+                    ]
             except json.JSONDecodeError as e:
                 raise ValueError(f"JSON de datos inválido: {e}")
             
-            # Encoding básico por defecto
-            if "encoding" not in spec:
+            # Encoding básico por defecto (canónico)
+            if not spec.get("encoding"):
                 spec["encoding"] = {
                     "x": {"field": "x", "type": "nominal"},
                     "y": {"field": "y", "type": "quantitative"}
                 }
             
-            # Aplicar tema
+            # Opciones de estilo (canónicas)
+            options: Dict[str, Any] = {}
             theme = self.theme_combo.currentText()
-            if theme != "default":
-                spec["config"] = {"theme": theme}
+            if theme and theme != "default":
+                options["theme"] = theme
+            color_scheme = self.color_scheme_combo.currentText()
+            if color_scheme:
+                options["colorScheme"] = color_scheme
+            if options:
+                spec["options"] = options
             
             return spec
             
@@ -658,33 +669,6 @@ class MainWindow(QMainWindow):
         except Exception as e:
             self.show_error(f"Error al exportar JSON: {e}")
     
-    def export_html(self):
-        """Exporta el gráfico como HTML"""
-        try:
-            spec = self.build_current_spec()
-            if not spec:
-                self.show_error("No hay especificación válida para exportar")
-                return
-            
-            file_path, _ = QFileDialog.getSaveFileName(
-                self,
-                "Exportar HTML",
-                "chart.html",
-                "HTML Files (*.html);;All Files (*)"
-            )
-            
-            if file_path:
-                html_content = self.preview_web_view.get_vega_template(spec)
-                
-                with open(file_path, 'w', encoding='utf-8') as file:
-                    file.write(html_content)
-                
-                self.statusBar().showMessage(f"HTML exportado a: {file_path}")
-                self.show_info(f"Gráfico exportado exitosamente a:\n{file_path}")
-                
-        except Exception as e:
-            self.show_error(f"Error al exportar HTML: {e}")
-    
     def export_to_platform(self, platform: str):
         """Exporta el gráfico a una plataforma específica"""
         try:
@@ -695,8 +679,8 @@ class MainWindow(QMainWindow):
             
             # Determinar extensión de archivo según la plataforma
             extensions = {
-                'powerbi_python': ('.py', 'Python Scripts (*.py)'),
-                'tableau': ('.twb', 'Tableau Workbooks (*.twb)'),
+                'powerbi_python': ('.pbiviz', 'Power BI Visual (*.pbiviz)'),
+                'tableau': ('.twb', 'Tableau Workbook (*.twb)'),
                 'looker': ('.lkml', 'LookML Files (*.lkml)'),
                 'looker_studio': ('.json', 'Looker Studio Config (*.json)')
             }
@@ -709,7 +693,7 @@ class MainWindow(QMainWindow):
             
             # Obtener nombre de archivo sugerido
             platform_names = {
-                'powerbi_python': 'power_bi_chart',
+                'powerbi_python': 'power_bi_visual',
                 'tableau': 'tableau_workbook',
                 'looker': 'looker_model',
                 'looker_studio': 'looker_studio_config'
@@ -743,6 +727,51 @@ class MainWindow(QMainWindow):
         except Exception as e:
             self.show_error(f"Error al exportar para {platform}: {e}")
     
+    def export_to_platform_with_extension(self, platform: str, extension: str):
+        """Exporta el gráfico a una plataforma específica con extensión personalizada"""
+        try:
+            spec = self.build_current_spec()
+            if not spec:
+                self.show_error("No hay especificación válida para exportar")
+                return
+            
+            # Nombres de archivos según extensión
+            if extension == '.twbx':
+                filter_text = 'Tableau Packaged Workbook (*.twbx)'
+                suggested_name = 'tableau_packaged_workbook.twbx'
+            else:
+                return self.export_to_platform(platform)
+            
+            file_path, _ = QFileDialog.getSaveFileName(
+                self,
+                f"Exportar para {platform.replace('_', ' ').title()} ({extension})",
+                suggested_name,
+                f"{filter_text};;All Files (*)"
+            )
+            
+            if file_path:
+                # Asegurar que termine con la extensión correcta
+                if not file_path.endswith(extension):
+                    file_path += extension
+                    
+                # Obtener el exportador
+                exporter = get_exporter(platform)
+                
+                # Crear ChartSpec object
+                chart_spec = ChartSpec(**spec)
+                
+                # Exportar
+                success = exporter.export(chart_spec, file_path)
+                
+                if success:
+                    self.statusBar().showMessage(f"Exportado para {platform} a: {file_path}")
+                    self.show_info(f"Gráfico exportado exitosamente para {platform.replace('_', ' ').title()}:\\n{file_path}")
+                else:
+                    self.show_error(f"Error al exportar para {platform}")
+                
+        except Exception as e:
+            self.show_error(f"Error al exportar para {platform}: {e}")
+
     def show_error(self, message: str):
         """Muestra un mensaje de error"""
         QMessageBox.critical(self, "Error", message)
