@@ -9,6 +9,11 @@ class ChartSpec(BaseModel):
     data: Union[List[Dict], Dict] = Field(..., description="Datos del gráfico")
     encoding: Dict[str, Any] = Field(..., description="Codificación visual")
     options: Dict[str, Any] = Field(default_factory=dict, description="Opciones adicionales")
+    # Metadatos y dimensiones opcionales
+    title: Optional[str] = Field(default=None, description="Título del gráfico")
+    description: Optional[str] = Field(default=None, description="Descripción del gráfico")
+    width: Optional[int] = Field(default=None, description="Ancho del gráfico en px")
+    height: Optional[int] = Field(default=None, description="Alto del gráfico en px")
     
     @validator('type')
     def validate_chart_type(cls, v):
@@ -30,4 +35,16 @@ class ChartSpec(BaseModel):
         
         if not v and chart_type not in allowed_empty_encoding:
             raise ValueError('La codificación no puede estar vacía para este tipo de gráfico')
+        return v
+
+    @validator('width')
+    def validate_width(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError('El ancho debe ser mayor que 0')
+        return v
+
+    @validator('height')
+    def validate_height(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError('El alto debe ser mayor que 0')
         return v
