@@ -1,31 +1,29 @@
-# __init__.py
-# Exportadores disponibles
+"""
+Registro de exportadores y funciones de acceso.
+"""
 
-from .base import IExporter
-from .powerbi_python.exporter import PowerBIPythonExporter
-from .tableau.exporter import TableauExporter
+from .powerbi_python.exporter_new import PowerBIPythonExporter
+from .tableau.exporter_new import TableauExporter
 from .looker.exporter import LookerExporter
 from .looker_studio.exporter import LookerStudioExporter
 
-# Registro de exportadores disponibles
-EXPORTERS = {
-    'powerbi_python': PowerBIPythonExporter,
-    'tableau': TableauExporter,
-    'looker': LookerExporter,
-    'looker_studio': LookerStudioExporter
+_EXPORTERS = {
+	"powerbi_python": PowerBIPythonExporter,
+	"tableau": TableauExporter,
+	"looker": LookerExporter,
+	"looker_studio": LookerStudioExporter,
 }
 
-def get_exporter(exporter_type: str) -> IExporter:
-    """
-    Obtiene una instancia del exportador solicitado
-    """
-    if exporter_type not in EXPORTERS:
-        raise ValueError(f"Exportador no soportado: {exporter_type}. Disponibles: {list(EXPORTERS.keys())}")
-    
-    return EXPORTERS[exporter_type]()
 
 def list_exporters():
-    """
-    Lista todos los exportadores disponibles
-    """
-    return list(EXPORTERS.keys())
+	"""Devolvemos la lista de claves de exportadores disponibles."""
+	return list(_EXPORTERS.keys())
+
+
+def get_exporter(name: str):
+	"""Obtenemos una instancia de exportador por nombre."""
+	cls = _EXPORTERS.get(name)
+	if not cls:
+		raise ValueError(f"Exportador desconocido: {name}")
+	return cls()
+
