@@ -1,0 +1,22 @@
+# Build outputs
+dist/
+lib/
+node_modules/
+*.pbiviz
+
+# IDE
+.vscode/
+.vs/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp files
+*.tmp
+*.temp
