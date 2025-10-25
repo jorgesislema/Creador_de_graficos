@@ -1,0 +1,99 @@
+<?xml version='1.0' encoding='utf-8'?>
+<workbook source-build="2023.1.0 (20223.23.0213.2227)" source-platform="win" version="18.1">
+  <document-format-change-manifest>
+    <SheetIdentifierTracking enabled="true" />
+    <WindowsPersistSimpleIdentifiers />
+  </document-format-change-manifest>
+  <repository-location id="localRepositoryLocation" path="demo_barras_vertical.twb" revision="1.0" />
+  <datasources>
+    <datasource caption="Datos del Gráfico" inline="true" name="federated.datasource" version="18.1">
+      <connection class="federated">
+        <named-connections>
+          <named-connection caption="DatosEjemplo" name="excel-direct.datos_ejemplo">
+            <connection class="excel-direct" cleaning="no" compat="no" dataRefreshTime="" filename="datos_ejemplo.xlsx" interpretationMode="0" password="" server="" validate="no" />
+          </named-connection>
+        </named-connections>
+      </connection>
+      <cols>
+        <column datatype="string" name="[Categoría]" role="dimension" semantic-role="[Category]" type="nominal" />
+        <column datatype="integer" name="[Valor]" role="measure" type="quantitative" />
+      </cols>
+    </datasource>
+  </datasources>
+  <worksheets>
+    <worksheet name="Gráfico de Barras Verticales">
+      <layout dim-ordering="alphabetic" dim-percentage="0.5" measure-ordering="alphabetic" measure-percentage="0.4" show-structure="true" />
+      <table name="[Gráfico de Barras Verticales]" type="view">
+        <view name="[Gráfico de Barras Verticales]" />
+        <panes>
+          <pane selection-relaxation-option="selection-relaxation-allow">
+            <marks class="bar">
+              <encodings>
+                <text column="[Categoría]" />
+                <text column="[Valor]" />
+              </encodings>
+              <style>
+                <format attr="size" value="10" />
+              </style>
+            </marks>
+          </pane>
+        </panes>
+      </table>
+    </worksheet>
+  </worksheets>
+  <dashboards>
+    <dashboard name="Dashboard - Gráfico de Barras Verticales">
+      <size maxheight="None" maxwidth="None" minheight="None" minwidth="None" />
+      <zones>
+        <zone h="None" id="3" type="layout-flow" w="None" x="0" y="0" />
+      </zones>
+    </dashboard>
+  </dashboards>
+  <windows>
+    <window class="worksheet" name="Gráfico de Barras Verticales">
+      <cards>
+        <edge name="left">
+          <strip size="160" />
+        </edge>
+      </cards>
+    </window>
+  </windows>
+  <!--
+Gráfico generado por Creador de Gráficos
+Tipo: barras_vertical
+Título: Gráfico de Barras Verticales
+Descripción: Comparación de categorías con barras verticales
+Especificación completa: {
+  "type": "barras_vertical",
+  "data": [
+    {
+      "categoria": "Ventas",
+      "valor": 150
+    },
+    {
+      "categoria": "Marketing",
+      "valor": 80
+    },
+    {
+      "categoria": "IT",
+      "valor": 120
+    }
+  ],
+  "encoding": {
+    "x": {
+      "field": "categoria",
+      "type": "nominal"
+    },
+    "y": {
+      "field": "valor",
+      "type": "quantitative"
+    }
+  },
+  "options": {},
+  "title": "Gr\u00e1fico de Barras Verticales",
+  "description": "Comparaci\u00f3n de categor\u00edas con barras verticales",
+  "width": null,
+  "height": null
+}
+-->
+</workbook>
