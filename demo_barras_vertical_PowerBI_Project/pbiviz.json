@@ -1,0 +1,23 @@
+{
+  "visual": {
+    "name": "CreadorGraficosbarrasvertical",
+    "displayName": "Gráfico de Barras Verticales",
+    "guid": "CreadorGraficosFC9743950ED84F9",
+    "visualClassName": "Visual",
+    "version": "1.0.0.0",
+    "description": "Comparación de categorías con barras verticales",
+    "supportUrl": "https://github.com/jorgesislema/Creador_de_graficos",
+    "gitHubUrl": "https://github.com/jorgesislema/Creador_de_graficos"
+  },
+  "apiVersion": "5.8.0",
+  "author": {
+    "name": "Creador de Gráficos",
+    "email": "support@ejemplo.com"
+  },
+  "assets": {
+    "icon": "assets/icon.png"
+  },
+  "style": "style/visual.less",
+  "capabilities": "capabilities.json",
+  "stringResources": []
+}
