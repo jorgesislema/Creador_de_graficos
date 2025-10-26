@@ -1,0 +1,92 @@
+<?xml version='1.0' encoding='utf-8'?>
+<workbook source-build="2023.1.0 (20223.23.0213.2227)" source-platform="win" version="18.1">
+  <document-format-change-manifest>
+    <SheetIdentifierTracking enabled="true" />
+    <WindowsPersistSimpleIdentifiers />
+  </document-format-change-manifest>
+  <repository-location id="localRepositoryLocation" path="demo_kpi.twb" revision="1.0" />
+  <datasources>
+    <datasource caption="Datos del Gráfico" inline="true" name="federated.datasource" version="18.1">
+      <connection class="federated">
+        <named-connections>
+          <named-connection caption="DatosEjemplo" name="excel-direct.datos_ejemplo">
+            <connection class="excel-direct" cleaning="no" compat="no" dataRefreshTime="" filename="datos_ejemplo.xlsx" interpretationMode="0" password="" server="" validate="no" />
+          </named-connection>
+        </named-connections>
+      </connection>
+      <cols>
+        <column datatype="string" name="[Categoría]" role="dimension" semantic-role="[Category]" type="nominal" />
+        <column datatype="integer" name="[Valor]" role="measure" type="quantitative" />
+      </cols>
+    </datasource>
+  </datasources>
+  <worksheets>
+    <worksheet name="Tarjeta KPI">
+      <layout dim-ordering="alphabetic" dim-percentage="0.5" measure-ordering="alphabetic" measure-percentage="0.4" show-structure="true" />
+      <table name="[Tarjeta KPI]" type="view">
+        <view name="[Tarjeta KPI]" />
+        <panes>
+          <pane selection-relaxation-option="selection-relaxation-allow">
+            <marks class="bar">
+              <encodings>
+                <text column="[Categoría]" />
+                <text column="[Valor]" />
+              </encodings>
+              <style>
+                <format attr="size" value="10" />
+              </style>
+            </marks>
+          </pane>
+        </panes>
+      </table>
+    </worksheet>
+  </worksheets>
+  <dashboards>
+    <dashboard name="Dashboard - Tarjeta KPI">
+      <size maxheight="None" maxwidth="None" minheight="None" minwidth="None" />
+      <zones>
+        <zone h="None" id="3" type="layout-flow" w="None" x="0" y="0" />
+      </zones>
+    </dashboard>
+  </dashboards>
+  <windows>
+    <window class="worksheet" name="Tarjeta KPI">
+      <cards>
+        <edge name="left">
+          <strip size="160" />
+        </edge>
+      </cards>
+    </window>
+  </windows>
+  <!--
+Gráfico generado por Creador de Gráficos
+Tipo: kpi
+Título: Tarjeta KPI
+Descripción: Indicador clave de rendimiento
+Especificación completa: {
+  "type": "kpi",
+  "data": [
+    {
+      "indicador": "Ventas Totales",
+      "valor": 1250000,
+      "meta": 1000000
+    }
+  ],
+  "encoding": {
+    "value": {
+      "field": "valor",
+      "type": "quantitative"
+    },
+    "target": {
+      "field": "meta",
+      "type": "quantitative"
+    }
+  },
+  "options": {},
+  "title": "Tarjeta KPI",
+  "description": "Indicador clave de rendimiento",
+  "width": null,
+  "height": null
+}
+-->
+</workbook>
