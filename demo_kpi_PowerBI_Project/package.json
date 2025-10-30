@@ -1,0 +1,21 @@
+{
+  "name": "creador-graficos-kpi",
+  "version": "1.0.0",
+  "description": "Indicador clave de rendimiento",
+  "main": "src/visual.ts",
+  "scripts": {
+    "build": "pbiviz package",
+    "start": "pbiviz start"
+  },
+  "dependencies": {
+    "d3": "^7.0.0",
+    "@types/d3": "^7.0.0"
+  },
+  "devDependencies": {
+    "powerbi-visuals-tools": "latest",
+    "@typescript-eslint/eslint-plugin": "latest",
+    "@typescript-eslint/parser": "latest",
+    "eslint": "latest",
+    "typescript": "latest"
+  }
+}
