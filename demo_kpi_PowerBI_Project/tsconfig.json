@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "lib": [
+      "ES2015",
+      "DOM"
+    ],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noImplicitAny": false,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "declaration": true,
+    "outDir": "./lib/",
+    "experimentalDecorators": true
+  },
+  "files": [
+    "src/visual.ts"
+  ]
+}
