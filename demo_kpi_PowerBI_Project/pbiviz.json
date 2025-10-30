@@ -1,0 +1,23 @@
+{
+  "visual": {
+    "name": "CreadorGraficoskpi",
+    "displayName": "Tarjeta KPI",
+    "guid": "CreadorGraficos73D6B0F66DE44CC",
+    "visualClassName": "Visual",
+    "version": "1.0.0.0",
+    "description": "Indicador clave de rendimiento",
+    "supportUrl": "https://github.com/jorgesislema/Creador_de_graficos",
+    "gitHubUrl": "https://github.com/jorgesislema/Creador_de_graficos"
+  },
+  "apiVersion": "5.8.0",
+  "author": {
+    "name": "Creador de Gráficos",
+    "email": "support@ejemplo.com"
+  },
+  "assets": {
+    "icon": "assets/icon.png"
+  },
+  "style": "style/visual.less",
+  "capabilities": "capabilities.json",
+  "stringResources": []
+}
