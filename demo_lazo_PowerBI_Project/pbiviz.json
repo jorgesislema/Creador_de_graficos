@@ -1,0 +1,23 @@
+{
+  "visual": {
+    "name": "CreadorGraficoslazo",
+    "displayName": "Gráfico de Lazo",
+    "guid": "CreadorGraficosC866E3BD1671459",
+    "visualClassName": "Visual",
+    "version": "1.0.0.0",
+    "description": "Visualización de procesos cíclicos o flujos circulares",
+    "supportUrl": "https://github.com/jorgesislema/Creador_de_graficos",
+    "gitHubUrl": "https://github.com/jorgesislema/Creador_de_graficos"
+  },
+  "apiVersion": "5.8.0",
+  "author": {
+    "name": "Creador de Gráficos",
+    "email": "support@ejemplo.com"
+  },
+  "assets": {
+    "icon": "assets/icon.png"
+  },
+  "style": "style/visual.less",
+  "capabilities": "capabilities.json",
+  "stringResources": []
+}
